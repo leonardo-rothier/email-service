@@ -4,5 +4,5 @@ Serviço de envio de emails em Go. Projeto de teste para envio de emails para um
 ## Como executar
 ```bash
 docker build -t email-service:latest .
-docker run --restart=unless-stopped -d -p 8080:8080 -e GMAIL_USERNAME=example.gmail.com -e GMAIL_PASSWORD=P#ssword email-service
+docker run --restart=unless-stopped -d -p 8080:8080 -e GMAIL_USERNAME="example.gmail.com" -e GMAIL_APP_PASSWORD="P#ssword" email-service
 ```
