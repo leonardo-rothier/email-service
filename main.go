@@ -187,7 +187,7 @@ func main() {
 
 	err := router.SetTrustedProxies(trustedProxies)
 	if err != nil {
-		log.Fatalf("Erro ao configurar proxies confiáveis: %v", err)
+		log.Fatalf("error on creating trusted proxies: %v", err)
 	}
 
 	router.POST("/send-email", emailHandler)
