@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"mime/multipart"
@@ -12,8 +13,11 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/gomail.v2"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,7 +56,41 @@ func generateMessageID() string {
 	return fmt.Sprintf("%d.%d", time.Now().UnixNano(), rand.Int63())
 }
 
-func sendEmailWithAttachment(to, subject, body, filename, attachment string) error {
+func sendEmailHtmlFormat(to, subject, body, filename, attachment string) error {
+	m := gomail.NewMessage()
+
+	sender := appConfig.GmailUser
+
+	m.SetHeader("From", sender)
+	m.SetHeader("To", sender, to)
+	//m.SetAddressHeader("Cc", "") #caso tenha algum
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
+
+	if filename != "" && attachment != "" {
+		decodedAttachment, err := base64.StdEncoding.DecodeString(attachment)
+		if err != nil {
+			return fmt.Errorf("failed to decode attachment: %w", err)
+		}
+
+		m.Attach(filename, gomail.SetCopyFunc(func(w io.Writer) error {
+			_, err := w.Write(decodedAttachment)
+			return err
+		}))
+	}
+
+	// send email
+	port, _ := strconv.Atoi(appConfig.SmtpPort)
+	d := gomail.NewDialer(appConfig.SmtpHost, port, appConfig.GmailUser, appConfig.GmailPassword)
+
+	if err := d.DialAndSend(m); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
+}
+
+func sendEmail(to, subject, body, filename, attachment string) error {
 	auth := smtp.PlainAuth("", appConfig.GmailUser, appConfig.GmailPassword, appConfig.SmtpHost)
 
 	var emailBuf bytes.Buffer
@@ -170,7 +208,23 @@ func emailHandler(c *gin.Context) {
 		return
 	}
 
-	if err := sendEmailWithAttachment(request.To, request.Subject, request.Body, request.Filename, request.Attachment); err != nil {
+	if err := sendEmail(request.To, request.Subject, request.Body, request.Filename, request.Attachment); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email enviado com sucesso"})
+}
+
+func emailHtmlHandler(c *gin.Context) {
+	var request EmailRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := sendEmailHtmlFormat(request.To, request.Subject, request.Body, request.Filename, request.Attachment); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -191,6 +245,7 @@ func main() {
 	}
 
 	router.POST("/send-email", emailHandler)
+	router.POST("/send-email-html", emailHtmlHandler)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
