@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -232,6 +233,28 @@ func emailHtmlHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Email enviado com sucesso"})
 }
 
+func getIpHandler(c *gin.Context) {
+	cmd := exec.Command("hostname", "-i")
+	output, err := cmd.Output()
+
+	var hostnameIP string
+	if err == nil {
+		hostnameIP = strings.TrimSpace(string(output))
+	}
+
+	var dialIP string
+	if conn, err := net.Dial("udp", "8.8.8.8"); err == nil {
+		defer conn.Close()
+		dialIP = conn.LocalAddr().(*net.UDPAddr).IP.String()
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"server_ip":   hostnameIP,
+		"outbound_ip": dialIP,
+		"client_ip":   c.ClientIP(),
+	})
+}
+
 func main() {
 	router := gin.Default()
 
@@ -243,6 +266,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("error on creating trusted proxies: %v", err)
 	}
+
+	router.GET("/get-ip", getIpHandler)
 
 	router.POST("/send-email", emailHandler)
 	router.POST("/send-email-html", emailHtmlHandler)
