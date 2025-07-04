@@ -62,7 +62,7 @@ jobs:
               docker rm ${{env.CONTAINER_NAME}} || true
               docker run -d -p 8080:8080 --name=${{env.CONTAINER_NAME}} \
                 -e ${{ vars.SENDER_PROVIDER }} \
-                -e ${{ vars.SENDER_NAMES }}
+                -e ${{ vars.SENDER_NAMES }} \
                 -e ${{ vars.SENDER_COMPRAS_EMAIL }} -e ${{ vars.SENDER_FINANCEIRO_EMAIL }} -e ${{ vars.SENDER_CONTROLE_EMAIL }} \
                 -e ${{ vars.SERVICE_ACCOUNT_EMAIL }} -e ${{ secrets.SERVICE_ACCOUNT_PASS }} \
                 ${{env.IMAGE}}:latest
