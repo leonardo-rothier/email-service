@@ -57,15 +57,15 @@ jobs:
             username: github
             key: ${{ secrets.ATLAS_PRIVATE_KEY }}
             script: |
-              docker pull $IMAGE:latest
-              docker stop $CONTAINER_NAME || true
-              docker rm $CONTAINER_NAME || true
-              docker run -d -p 8080:8080 --name=$CONTAINER_NAME \
+              docker pull ${{env.IMAGE}}:latest
+              docker stop ${{env.CONTAINER_NAME}} || true
+              docker rm ${{env.CONTAINER_NAME}} || true
+              docker run -d -p 8080:8080 --name=${{env.CONTAINER_NAME}} \
                 -e ${{ vars.SENDER_PROVIDER }} \
                 -e ${{ vars.SENDER_NAMES }}
                 -e ${{ vars.SENDER_COMPRAS_EMAIL }} -e ${{ vars.SENDER_FINANCEIRO_EMAIL }} -e ${{ vars.SENDER_CONTROLE_EMAIL }} \
                 -e ${{ vars.SERVICE_ACCOUNT_EMAIL }} -e ${{ secrets.SERVICE_ACCOUNT_PASS }} \
-                $IMAGE:latest
+                ${{env.IMAGE}}:latest
 
               # clean: removing dangling images  
               docker image prune -af
