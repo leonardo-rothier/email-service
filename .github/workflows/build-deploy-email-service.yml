@@ -57,6 +57,8 @@ jobs:
             username: github
             key: ${{ secrets.ATLAS_PRIVATE_KEY }}
             script: |
+              set -e
+              
               docker pull ${{env.IMAGE}}:latest
               docker stop ${{env.CONTAINER_NAME}} || true
               docker rm ${{env.CONTAINER_NAME}} || true
