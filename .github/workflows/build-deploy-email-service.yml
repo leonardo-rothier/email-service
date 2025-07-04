@@ -53,6 +53,7 @@ jobs:
           uses: appleboy/ssh-action@v1.2.2
           with:
             host: ${{ secrets.ATLAS_HOST }}
+            port: 2223
             username: github
             key: ${{ secrets.ATLAS_PRIVATE_KEY }}
             script: |
