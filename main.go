@@ -22,11 +22,12 @@ import (
 )
 
 type EmailRequest struct {
-	To         string `json:"to" binding:"required"`
-	Subject    string `json:"subject" binding:"required"`
-	Body       string `json:"body" binding:"required"`
-	Filename   string `json:"filename,omitempty"`
-	Attachment string `json:"attachment,omitempty"`
+	To         string   `json:"to" binding:"required"`
+	Cc         []string `json:"cc,omitempty"`
+	Subject    string   `json:"subject" binding:"required"`
+	Body       string   `json:"body" binding:"required"`
+	Filename   string   `json:"filename,omitempty"`
+	Attachment string   `json:"attachment,omitempty"`
 }
 
 type SenderConfig struct {
@@ -96,11 +97,16 @@ func init() {
 	}
 }
 
-func sendEmailHtmlFormat(config SenderConfig, to, subject, body, filename, attachment string) error {
+func sendEmailHtmlFormat(config SenderConfig, to string, cc []string, subject, body, filename, attachment string) error {
 	m := gomail.NewMessage()
 
 	m.SetHeader("From", config.FromEmail)
 	m.SetHeader("To", to)
+
+	if len(cc) > 0 {
+		m.SetHeader("Cc", cc...)
+	}
+
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", body)
 
@@ -155,7 +161,7 @@ func createEmailHandler(senderName string) gin.HandlerFunc {
 			return
 		}
 
-		err := sendEmailHtmlFormat(config, request.To, request.Subject, request.Body, request.Filename, request.Attachment)
+		err := sendEmailHtmlFormat(config, request.To, request.Cc, request.Subject, request.Body, request.Filename, request.Attachment)
 
 		if err != nil {
 			metrics.EmailsProcessed.WithLabelValues(senderName, strconv.Itoa(http.StatusInternalServerError)).Inc()

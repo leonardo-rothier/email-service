@@ -58,11 +58,11 @@ jobs:
             key: ${{ secrets.ATLAS_PRIVATE_KEY }}
             script: |
               set -e
-              
+
               docker pull ${{env.IMAGE}}:latest
               docker stop ${{env.CONTAINER_NAME}} || true
               docker rm ${{env.CONTAINER_NAME}} || true
-              docker run -d -p 8080:8080 --name=${{env.CONTAINER_NAME}} \
+              docker run --restart=unless-stopped -d -p 8080:8080 --name=${{env.CONTAINER_NAME}} \
                 -e SENDER_PROVIDER=${{ vars.SENDER_PROVIDER }} \
                 -e SENDER_NAMES=${{ vars.SENDER_NAMES }} \
                 -e SENDER_COMPRAS_EMAIL=${{ vars.SENDER_COMPRAS_EMAIL }} -e SENDER_FINANCEIRO_EMAIL=${{ vars.SENDER_FINANCEIRO_EMAIL }} -e SENDER_CONTROLE_EMAIL=${{ vars.SENDER_CONTROLE_EMAIL }} \
