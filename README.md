@@ -1,8 +1,8 @@
 # Email Service
 
-Serviço simples de envio de e-mails, desenvolvido para automatizar o disparo de relatórios financeiros e de compras para a empresa.
+Serviço simples de envio de e-mails, desenvolvido para automatizar o disparo de relatórios financeiros e de compras para a empresa.  
 
-Ele expõe uma API REST para envio de e-mails com suporte a anexos (base64), múltiplos remetentes configuráveis e métricas via Prometheus.
+Ele expõe uma API REST para envio de e-mails com suporte a anexos (base64), múltiplos remetentes configuráveis e métricas via Prometheus.  
 
 ---
 
@@ -33,6 +33,7 @@ SENDER_NAMES=compras,financeiro
 # Para cada sender
 SENDER_COMPRAS_EMAIL=compras@dominio.com
 SENDER_FINANCEIRO_EMAIL=financeiro@dominio.com
+SENDER_FINANCEIRO_EMAIL=cotrole@dominio.com
 
 PORT=8080
 ```
@@ -57,5 +58,6 @@ go run main.go
 | ------ | ------------------------ | --------------------------------------------- |  
 | POST   | `/send-email-compras`    | Envia e-mail usando o remetente "compras".    |  
 | POST   | `/send-email-financeiro` | Envia e-mail usando o remetente "financeiro". |  
+| POST   | `/send-email-controle`   | Envia e-mail usando o remetente "controle".   |  
 | GET    | `/health`                | Verifica se o serviço está saudável.          |  
 | GET    | `/get-ip`                | Retorna IPs do servidor e cliente.            |  
