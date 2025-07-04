@@ -34,7 +34,6 @@ jobs:
 
                   type=ref,event=tag
 
-            
             - name: Build and Push
               uses: docker/build-push-action@v6
               with:
@@ -42,3 +41,30 @@ jobs:
                 push: true
                 tags: ${{ steps.meta.outputs.tags }}
                 labels: ${{ steps.meta.outputs.labels }}
+    
+    deploy_email_service:
+      if: contains(github.ref, 'main')
+      needs: build_email_service
+      runs-on: ubuntu-latest
+      env:
+        CONTAINER_NAME: email-service
+      steps:
+        - name: Deploy to Server via SSH
+          uses: appleboy/ssh-action@v1.2.2
+          with:
+            host: ${{ secrets.ATLAS_HOST }}
+            username: github
+            key: ${{ secrets.ATLAS_PRIVATE_KEY }}
+            script: |
+              docker pull $IMAGE:latest
+              docker stop $CONTAINER_NAME || true
+              docker rm $CONTAINER_NAME || true
+              docker run -d -p 8080:8080 --name=$CONTAINER_NAME \
+                -e ${{ vars.SENDER_PROVIDER }} \
+                -e ${{ vars.SENDER_NAMES }}
+                -e ${{ vars.SENDER_COMPRAS_EMAIL }} -e ${{ vars.SENDER_FINANCEIRO_EMAIL }} -e ${{ vars.SENDER_CONTROLE_EMAIL }} \
+                -e ${{ vars.SERVICE_ACCOUNT_EMAIL }} -e ${{ secrets.SERVICE_ACCOUNT_PASS }} \
+                $IMAGE:latest
+
+              # clean: removing dangling images  
+              docker image prune -af
